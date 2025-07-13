@@ -1,4 +1,8 @@
-import { Metadata } from 'next';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
 import Benefits from '@/components/landing/Benefits';
@@ -6,25 +10,40 @@ import Testimonials from '@/components/landing/Testimonials';
 import CTA from '@/components/landing/CTA';
 import Footer from '@/components/landing/Footer';
 
-export const metadata: Metadata = {
-  title: 'FastFlow - Transform Your Health with Smart Intermittent Fasting',
-  description: 'Join thousands who transformed their health with FastFlow. Track 16:8, 18:6, and 20:4 fasting schedules with beautiful analytics, personalized insights, and proven results.',
-  openGraph: {
-    title: 'FastFlow - Transform Your Health with Smart Intermittent Fasting',
-    description: 'Join thousands who transformed their health with FastFlow. Beautiful analytics, personalized insights, and proven results.',
-    images: ['/og-home.jpg'],
-  },
-};
-
 export default function HomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      // Redirect authenticated users to dashboard
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-coral-50 to-primary-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400 font-manrope">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return null; // Will redirect to dashboard
+  }
+
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <Hero />
       <Features />
       <Benefits />
       <Testimonials />
       <CTA />
       <Footer />
-    </main>
+    </div>
   );
 }

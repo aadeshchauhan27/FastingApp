@@ -45,35 +45,35 @@ export default function Features() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-inter font-bold gradient-text mb-6">
+          <h2 className="text-4xl md:text-5xl font-inter font-bold gradient-text mb-6 slide-up">
             Everything You Need to Succeed
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 font-manrope max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 font-manrope max-w-3xl mx-auto slide-up animation-delay-200">
             Powerful features designed to make intermittent fasting simple, effective, and sustainable
           </p>
         </div>
 
-        {/* Features Grid */}
+        {/* Enhanced Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={feature.title}
-                className="group glass-card rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group glass-card-hover rounded-3xl p-8 card-hover slide-up"
+                style={{ animationDelay: `${index * 200}ms` }}
               >
-                <div className="flex items-center justify-center mb-6">
-                  <div className={`p-4 bg-gradient-to-r ${feature.gradient} rounded-2xl group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="h-8 w-8 text-white" />
+                <div className="flex items-center justify-center mb-8">
+                  <div className={`p-5 bg-gradient-to-r ${feature.gradient} rounded-2xl shadow-lg glow group-hover:scale-110 group-hover:shadow-xl transition-all duration-300`}>
+                    <Icon className="h-10 w-10 text-white" />
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-inter font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">
+                <h3 className="text-2xl font-inter font-bold gradient-text mb-4 text-center">
                   {feature.title}
                 </h3>
                 
-                <p className="text-gray-600 dark:text-gray-400 font-manrope text-center leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-400 font-manrope text-center leading-relaxed text-lg">
                   {feature.description}
                 </p>
               </div>

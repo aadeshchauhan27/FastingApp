@@ -1,42 +1,87 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Clock, Flame, Target, Activity, Calendar } from 'lucide-react';
+import { Clock, Flame, Target, Activity, Calendar } from 'lucide-react';
 import CircularTimer from './CircularTimer';
 import FastingTypeSelector from './FastingTypeSelector';
 import MotivationalQuote from './MotivationalQuote';
 import FastingStateBanner from './FastingStateBanner';
 import StatsPage from './StatsPage';
 import CalendarPage from './CalendarPage';
-import Link from 'next/link';
+import { useDarkMode } from '../DarkModeProvider';
+import { useAuth } from '../AuthProvider';
+import { FastingService, LocalFastingRecord } from '@/lib/fasting';
 
-export interface FastingRecord {
-  id: string;
-  type: string;
-  startTime: Date;
-  endTime?: Date;
-  targetDuration: number; // in hours
-  actualDuration?: number; // in hours
-  completed: boolean;
-  manuallyAdded?: boolean;
+function getActiveTab() {
+  if (typeof window !== 'undefined' && window.location.hash) {
+    const hash = window.location.hash.replace('#', '');
+    if (["timer", "progress", "stats", "calendar"].includes(hash)) return hash;
+  }
+  return 'timer';
 }
 
 export default function DashboardApp() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [activeTab, setActiveTab] = useState('timer');
+  const { darkMode } = useDarkMode();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState(getActiveTab());
   const [fastingType, setFastingType] = useState('16:8');
   const [isFasting, setIsFasting] = useState(false);
   const [fastingStartTime, setFastingStartTime] = useState<Date | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [fastingHistory, setFastingHistory] = useState<FastingRecord[]>([]);
+  const [fastingHistory, setFastingHistory] = useState<LocalFastingRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Listen for hash changes to update the active tab
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
+    const onHashChange = () => setActiveTab(getActiveTab());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Load fasting history
+  useEffect(() => {
+    const loadFastingHistory = async () => {
+      setIsLoading(true);
+      try {
+        if (user) {
+          // Load from Supabase if user is authenticated
+          const history = await FastingService.getFastingHistory(user.id);
+          setFastingHistory(history);
+        } else {
+          // Load from local storage if no user
+          const history = FastingService.getLocalFastingHistory();
+          setFastingHistory(history);
+        }
+      } catch (error) {
+        console.error('Error loading fasting history:', error);
+        // Fallback to local storage
+        const history = FastingService.getLocalFastingHistory();
+        setFastingHistory(history);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFastingHistory();
+  }, [user]);
+
+  // Migrate local data to Supabase when user signs in
+  useEffect(() => {
+    const migrateData = async () => {
+      if (user) {
+        try {
+          await FastingService.migrateLocalToSupabase(user.id);
+          // Reload history after migration
+          const history = await FastingService.getFastingHistory(user.id);
+          setFastingHistory(history);
+        } catch (error) {
+          console.error('Error migrating data:', error);
+        }
+      }
+    };
+
+    migrateData();
+  }, [user]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -76,13 +121,32 @@ export default function DashboardApp() {
     return Math.min(100, (elapsed / duration) * 100);
   };
 
-  const completeFast = () => {
+  const saveFastingRecord = async (record: LocalFastingRecord) => {
+    try {
+      if (user) {
+        await FastingService.saveFastingRecord(record, user.id);
+      } else {
+        // Save to local storage if no user
+        const history = FastingService.getLocalFastingHistory();
+        history.unshift(record);
+        FastingService.saveLocalFastingHistory(history);
+      }
+    } catch (error) {
+      console.error('Error saving fasting record:', error);
+      // Fallback to local storage
+      const history = FastingService.getLocalFastingHistory();
+      history.unshift(record);
+      FastingService.saveLocalFastingHistory(history);
+    }
+  };
+
+  const completeFast = async () => {
     if (fastingStartTime) {
       const endTime = new Date();
       const actualDuration = (endTime.getTime() - fastingStartTime.getTime()) / (1000 * 60 * 60);
       const targetDuration = getFastingDuration();
       
-      const record: FastingRecord = {
+      const record: LocalFastingRecord = {
         id: Date.now().toString(),
         type: fastingType,
         startTime: fastingStartTime,
@@ -92,6 +156,7 @@ export default function DashboardApp() {
         completed: actualDuration >= targetDuration * 0.9, // 90% completion counts as success
       };
       
+      await saveFastingRecord(record);
       setFastingHistory(prev => [record, ...prev]);
     }
   };
@@ -103,14 +168,14 @@ export default function DashboardApp() {
     setTimeRemaining(duration);
   };
 
-  const stopFast = () => {
+  const stopFast = async () => {
     setIsFasting(false);
     if (fastingStartTime) {
       const endTime = new Date();
       const actualDuration = (endTime.getTime() - fastingStartTime.getTime()) / (1000 * 60 * 60);
       const targetDuration = getFastingDuration();
       
-      const record: FastingRecord = {
+      const record: LocalFastingRecord = {
         id: Date.now().toString(),
         type: fastingType,
         startTime: fastingStartTime,
@@ -120,128 +185,69 @@ export default function DashboardApp() {
         completed: false, // Manually stopped
       };
       
+      await saveFastingRecord(record);
       setFastingHistory(prev => [record, ...prev]);
     }
     setFastingStartTime(null);
     setTimeRemaining(0);
   };
 
-  const addManualFast = (record: Omit<FastingRecord, 'id'>) => {
-    const newRecord: FastingRecord = {
+  const addManualFast = async (record: Omit<LocalFastingRecord, 'id'>) => {
+    const newRecord: LocalFastingRecord = {
       ...record,
       id: Date.now().toString(),
       manuallyAdded: true,
     };
+    
+    await saveFastingRecord(newRecord);
     setFastingHistory(prev => [newRecord, ...prev].sort((a, b) => 
       new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
     ));
   };
 
-  const tabs = [
-    { id: 'timer', label: 'Timer', icon: Clock },
-    { id: 'progress', label: 'Progress', icon: Target },
-    { id: 'stats', label: 'Stats', icon: Activity },
-    { id: 'calendar', label: 'Calendar', icon: Calendar },
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-coral-50 to-primary-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400 font-manrope">Loading your fasting data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${darkMode ? 'dark' : ''}`}>
+    <div className="min-h-screen transition-all duration-500">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-primary-50 via-coral-50 to-primary-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-500" />
       
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/30 dark:bg-gray-900/30 border-b border-white/20 dark:border-gray-700/30 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-r from-primary-500 to-coral-500 rounded-xl shadow-lg">
-                <Flame className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-inter font-bold bg-gradient-to-r from-primary-600 to-coral-600 bg-clip-text text-transparent">
-                FastFlow
-              </h1>
-            </Link>
-            
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/blog"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-manrope"
-              >
-                Blog
-              </Link>
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded-xl bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-600/30 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all duration-300"
-              >
-                {darkMode ? (
-                  <Sun className="h-5 w-5 text-yellow-500" />
-                ) : (
-                  <Moon className="h-5 w-5 text-indigo-600" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigation Tabs */}
-      <nav className="sticky top-16 z-40 backdrop-blur-xl bg-white/20 dark:bg-gray-900/20 border-b border-white/10 dark:border-gray-700/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 py-3">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-manrope font-medium transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? 'bg-gradient-to-r from-primary-500 to-coral-500 text-white shadow-lg'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-gray-800/30'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </nav>
-
       {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-5xl mx-auto px-2 sm:px-4 lg:px-6 py-4 md:py-6">
         {activeTab === 'timer' && (
-          <div className="space-y-8">
+          <div className="space-y-4 md:space-y-6">
             {/* Fasting State Banner */}
-            <FastingStateBanner isFasting={isFasting} />
+            <div className="mb-2 md:mb-4">
+              <FastingStateBanner isFasting={isFasting} />
+            </div>
 
-            {/* Main Timer Card */}
-            <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
-              <div className="text-center space-y-8">
-                {/* Fasting Type Selector */}
-                <FastingTypeSelector
-                  selectedType={fastingType}
-                  onTypeChange={setFastingType}
-                  disabled={isFasting}
-                />
-
-                {/* Circular Timer */}
-                <CircularTimer
-                  progress={getProgress()}
-                  timeRemaining={timeRemaining}
-                  isFasting={isFasting}
-                  fastingType={fastingType}
-                />
-
-                {/* Action Button */}
-                <div className="flex justify-center">
+            {/* Timer and Controls Section */}
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-8 gap-4 md:gap-8">
+              {/* Plan selector and action button on the left (md+), above on mobile */}
+              <div className="flex-1 flex flex-col items-center md:items-start space-y-4 md:space-y-6 order-1 md:order-1">
+                <div className="w-full">
+                  <FastingTypeSelector
+                    selectedType={fastingType}
+                    onTypeChange={setFastingType}
+                    disabled={isFasting}
+                  />
+                </div>
+                <div className="flex justify-center w-full">
                   {!isFasting ? (
                     <button
                       onClick={startFast}
-                      className="group relative px-8 py-4 bg-gradient-to-r from-primary-500 to-coral-500 hover:from-primary-600 hover:to-coral-600 text-white font-inter font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 animate-glow"
+                      className="group relative px-6 py-3 btn-primary text-base md:text-lg glow-hover min-w-[160px]"
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
                         <Clock className="h-5 w-5" />
                         <span>Start Fasting</span>
                       </div>
@@ -249,50 +255,55 @@ export default function DashboardApp() {
                   ) : (
                     <button
                       onClick={stopFast}
-                      className="px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white font-inter font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                      className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-inter font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 min-w-[160px]"
                     >
-                      Stop Fast
+                      <div className="flex items-center space-x-2">
+                        <Flame className="h-5 w-5" />
+                        <span>Stop Fasting</span>
+                      </div>
                     </button>
                   )}
                 </div>
-
-                {/* Motivational Quote */}
-                <MotivationalQuote isFasting={isFasting} />
+              </div>
+              {/* Timer on the right (md+), below on mobile */}
+              <div className="flex-1 flex flex-col items-center md:items-end order-2 md:order-2">
+                <div className="w-full max-w-xs md:max-w-sm">
+                  <CircularTimer
+                    progress={getProgress()}
+                    timeRemaining={timeRemaining}
+                    isFasting={isFasting}
+                    fastingType={fastingType}
+                  />
+                </div>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-xl rounded-2xl p-6 border border-white/20 dark:border-gray-700/20">
-                <div className="text-center">
-                  <div className="text-3xl font-inter font-bold text-primary-600 dark:text-primary-400">
-                    {fastingType}
+        {activeTab === 'progress' && (
+          <div className="space-y-4 md:space-y-6">
+            <div className="glass-card-hover rounded-2xl p-4 md:p-6">
+              <h2 className="text-xl font-inter font-bold gradient-text mb-4">Your Progress</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-xl font-inter font-bold gradient-text mb-1">
+                    {fastingHistory.filter(f => f.completed).length}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-manrope">
-                    Current Plan
-                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 font-manrope">Completed Fasts</div>
                 </div>
-              </div>
-
-              <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-xl rounded-2xl p-6 border border-white/20 dark:border-gray-700/20">
-                <div className="text-center">
-                  <div className="text-3xl font-inter font-bold text-coral-600 dark:text-coral-400">
-                    {isFasting ? Math.round(getProgress()) : 0}%
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-xl font-inter font-bold gradient-text mb-1">
+                    {fastingHistory.length}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-manrope">
-                    Progress
-                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 font-manrope">Total Fasts</div>
                 </div>
-              </div>
-
-              <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-xl rounded-2xl p-6 border border-white/20 dark:border-gray-700/20">
-                <div className="text-center">
-                  <div className="text-3xl font-inter font-bold text-indigo-600 dark:text-indigo-400">
-                    0
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-xl font-inter font-bold gradient-text mb-1">
+                    {fastingHistory.length > 0 
+                      ? Math.round((fastingHistory.filter(f => f.completed).length / fastingHistory.length) * 100)
+                      : 0}%
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-manrope">
-                    Streak Days
-                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 font-manrope">Success Rate</div>
                 </div>
               </div>
             </div>
@@ -300,31 +311,11 @@ export default function DashboardApp() {
         )}
 
         {activeTab === 'stats' && (
-          <StatsPage 
-            fastingHistory={fastingHistory} 
-            onAddManualFast={addManualFast}
-          />
+          <StatsPage fastingHistory={fastingHistory} onAddManualFast={addManualFast} />
         )}
 
         {activeTab === 'calendar' && (
-          <CalendarPage 
-            fastingHistory={fastingHistory} 
-            onAddManualFast={addManualFast}
-          />
-        )}
-
-        {activeTab === 'progress' && (
-          <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📈</div>
-              <h3 className="text-2xl font-inter font-bold text-gray-800 dark:text-gray-200 mb-2">
-                Progress Tracking
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 font-manrope">
-                Advanced progress analytics coming soon!
-              </p>
-            </div>
-          </div>
+          <CalendarPage fastingHistory={fastingHistory} onAddManualFast={addManualFast} />
         )}
       </main>
     </div>

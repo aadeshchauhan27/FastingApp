@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 
 interface FastingTypeSelectorProps {
   selectedType: string;
@@ -18,41 +19,41 @@ const FastingTypeSelector: React.FC<FastingTypeSelectorProps> = ({
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-lg font-inter font-semibold text-gray-800 dark:text-gray-200 mb-2">
+        <h3 className="text-2xl font-inter font-bold gradient-text mb-3">
           Choose Your Fasting Plan
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 font-manrope">
+        <p className="text-lg text-gray-600 dark:text-gray-400 font-manrope">
           Select the fasting schedule that works best for you
         </p>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-3">
+      <div className="flex flex-wrap justify-center gap-4">
         {fastingTypes.map((type) => (
           <button
             key={type.value}
             onClick={() => onTypeChange(type.value)}
             disabled={disabled}
-            className={`group relative px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
+            className={`group relative px-8 py-6 rounded-3xl border-2 transition-all duration-300 card-hover ${
               selectedType === type.value
-                ? 'border-primary-500 bg-gradient-to-r from-primary-50 to-coral-50 dark:from-primary-900/30 dark:to-coral-900/30 shadow-lg'
-                : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-primary-300 dark:hover:border-primary-600'
+                ? 'border-primary-500/50 bg-gradient-to-r from-primary-500/20 to-coral-500/20 backdrop-blur-xl shadow-lg glow-hover'
+                : 'border-white/30 dark:border-gray-600/30 bg-white/30 dark:bg-gray-800/30 backdrop-blur-xl hover:border-primary-300/50 dark:hover:border-primary-600/50 hover:bg-white/40 dark:hover:bg-gray-800/40'
             } ${
               disabled
                 ? 'opacity-50 cursor-not-allowed'
-                : 'cursor-pointer hover:shadow-md hover:scale-105'
+                : 'cursor-pointer hover:scale-105'
             }`}
           >
             <div className="text-center">
-              <div className={`text-2xl font-inter font-bold mb-1 ${
+              <div className={`text-3xl font-inter font-bold mb-2 ${
                 selectedType === type.value
-                  ? 'text-primary-600 dark:text-primary-400'
+                  ? 'gradient-text'
                   : 'text-gray-800 dark:text-gray-200'
               }`}>
                 {type.label}
               </div>
-              <div className={`text-xs font-manrope ${
+              <div className={`text-sm font-manrope ${
                 selectedType === type.value
                   ? 'text-primary-600 dark:text-primary-400'
                   : 'text-gray-500 dark:text-gray-400'
@@ -62,10 +63,8 @@ const FastingTypeSelector: React.FC<FastingTypeSelectorProps> = ({
             </div>
             
             {selectedType === type.value && (
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-primary-500 to-coral-500 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-primary-500 to-coral-500 rounded-full flex items-center justify-center shadow-lg glow">
+                <Check className="w-4 h-4 text-white" />
               </div>
             )}
           </button>
