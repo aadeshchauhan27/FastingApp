@@ -13,13 +13,13 @@ import {
   XCircle,
   Flame
 } from 'lucide-react';
-import { FastingRecord } from './DashboardApp';
+import { LocalFastingRecord } from '@/lib/fasting';
 import AddManualFastModal from './AddManualFastModal';
 import Image from 'next/image';
 
 interface StatsPageProps {
-  fastingHistory: FastingRecord[];
-  onAddManualFast: (record: Omit<FastingRecord, 'id'>) => void;
+  fastingHistory: LocalFastingRecord[];
+  onAddManualFast: (record: Omit<LocalFastingRecord, 'id'>) => void;
 }
 
 const StatsPage: React.FC<StatsPageProps> = ({ fastingHistory, onAddManualFast }) => {
@@ -51,7 +51,7 @@ const StatsPage: React.FC<StatsPageProps> = ({ fastingHistory, onAddManualFast }
     }
   ];
 
-  const calculateStreak = (history: FastingRecord[]) => {
+  const calculateStreak = (history: LocalFastingRecord[]) => {
     if (history.length === 0) return 0;
     
     const sortedHistory = [...history]

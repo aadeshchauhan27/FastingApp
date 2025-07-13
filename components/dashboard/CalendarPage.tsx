@@ -9,12 +9,12 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { FastingRecord } from './DashboardApp';
+import { LocalFastingRecord } from '@/lib/fasting';
 import AddManualFastModal from './AddManualFastModal';
 
 interface CalendarPageProps {
-  fastingHistory: FastingRecord[];
-  onAddManualFast: (record: Omit<FastingRecord, 'id'>) => void;
+  fastingHistory: LocalFastingRecord[];
+  onAddManualFast: (record: Omit<LocalFastingRecord, 'id'>) => void;
 }
 
 const CalendarPage: React.FC<CalendarPageProps> = ({ fastingHistory, onAddManualFast }) => {

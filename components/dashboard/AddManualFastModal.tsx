@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { X, Clock, Calendar, Target } from 'lucide-react';
-import { FastingRecord } from './DashboardApp';
+import { LocalFastingRecord } from '@/lib/fasting';
 
 interface AddManualFastModalProps {
   onClose: () => void;
-  onAdd: (record: Omit<FastingRecord, 'id'>) => void;
+  onAdd: (record: Omit<LocalFastingRecord, 'id'>) => void;
   preselectedDate?: Date | null;
 }
 
@@ -49,7 +49,7 @@ const AddManualFastModal: React.FC<AddManualFastModalProps> = ({
     
     endDateTime.setHours(endDateTime.getHours() + finalActualDuration);
 
-    const record: Omit<FastingRecord, 'id'> = {
+    const record: Omit<LocalFastingRecord, 'id'> = {
       type: fastingType,
       startTime: startDateTime,
       endTime: endDateTime,
