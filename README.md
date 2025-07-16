@@ -98,6 +98,14 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
 
+## App Structure
+
+- **Home Page (`/`)**: Main fasting timer and dashboard for authenticated users
+- **Landing Page (`/landing`)**: Marketing page for new users
+- **Login (`/auth/login`)**: Authentication page
+- **Signup (`/auth/signup`)**: User registration page
+- **Dashboard (`/dashboard`)**: Alternative route to the main fasting interface
+
 ## Backend Features
 
 ### 🔐 Authentication Backend (Supabase Auth)

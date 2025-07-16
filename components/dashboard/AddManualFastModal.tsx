@@ -233,7 +233,7 @@ const AddManualFastModal: React.FC<AddManualFastModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-500 to-coral-500 text-white rounded-xl hover:from-primary-600 hover:to-coral-600 transition-all duration-300 font-manrope font-medium"
+              className="flex-1 px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-inter font-bold text-lg shadow-lg hover:brightness-110 hover:scale-105 transition-all duration-200"
             >
               Add Fast
             </button>

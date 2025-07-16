@@ -81,32 +81,6 @@ const categories = ['All', 'Beginner Guide', 'Methods', 'Nutrition', 'Weight Los
 export default function BlogPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-coral-50 to-primary-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Header */}
-      <header className="glass-card sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-r from-primary-500 to-coral-500 rounded-xl">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-2xl font-inter font-bold gradient-text">FastFlow</span>
-            </Link>
-            
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                Home
-              </Link>
-              <Link href="/blog" className="text-primary-600 dark:text-primary-400 font-semibold">
-                Blog
-              </Link>
-              <Link href="/dashboard" className="btn-primary px-6 py-2">
-                Dashboard
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

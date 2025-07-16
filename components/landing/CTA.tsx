@@ -51,16 +51,16 @@ export default function CTA() {
             {/* Enhanced CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 slide-up animation-delay-800">
               <Link
-                href="/dashboard"
-                className="group btn-primary px-8 py-4 text-lg flex items-center space-x-3 glow-hover"
+                href="/auth/login"
+                className="group flex items-center space-x-3 px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-inter font-bold text-lg shadow-lg hover:brightness-110 hover:scale-105 transition-all duration-200"
               >
                 <span>Start Your Journey</span>
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
               </Link>
               
               <Link
                 href="/blog"
-                className="flex items-center space-x-3 px-8 py-4 btn-glass rounded-2xl font-manrope font-medium text-gray-700 dark:text-gray-300 card-hover"
+                className="flex items-center space-x-3 px-8 py-4 rounded-full bg-gradient-to-r from-gray-200 to-gray-400 text-gray-800 dark:text-gray-900 font-inter font-bold text-lg shadow hover:brightness-105 hover:scale-105 transition-all duration-200"
               >
                 <span>Learn More</span>
               </Link>

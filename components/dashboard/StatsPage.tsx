@@ -251,9 +251,9 @@ const StatsPage: React.FC<StatsPageProps> = ({ fastingHistory, onAddManualFast }
             
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-500 to-coral-500 text-white rounded-xl hover:from-primary-600 hover:to-coral-600 transition-all duration-300 font-manrope font-medium"
+              className="flex items-center space-x-3 px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-inter font-bold text-lg shadow-lg hover:brightness-110 hover:scale-105 transition-all duration-200"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-6 w-6" />
               <span>Add Fast</span>
             </button>
           </div>
@@ -309,7 +309,7 @@ const StatsPage: React.FC<StatsPageProps> = ({ fastingHistory, onAddManualFast }
                 
                 <div className="text-right">
                   <div className="font-inter font-semibold text-gray-800 dark:text-gray-200">
-                    {record.actualDuration ? formatDuration(record.actualDuration) : 'In Progress'}
+                    {record.endTime ? `Lasted: ${formatDuration(record.actualDuration || 0)}` : 'In Progress'}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 font-manrope">
                     Target: {formatDuration(record.targetDuration)}

@@ -90,12 +90,12 @@ export default function RootLayout({
       </head>
       <body className="font-inter antialiased">
         <AuthProvider>
-          <DarkModeProvider>
-            <Navbar />
-            <div className="pt-16">
-              {children}
-            </div>
-          </DarkModeProvider>
+        <DarkModeProvider>
+          <Navbar />
+          <div className="pt-16">
+            {children}
+          </div>
+        </DarkModeProvider>
         </AuthProvider>
       </body>
     </html>

@@ -5,7 +5,7 @@ const testimonials = [
     name: 'Sarah Johnson',
     role: 'Marketing Manager',
     image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150',
-    content: 'FastFlow completely transformed my relationship with food. I\'ve lost 25 pounds and feel more energetic than ever. The app makes fasting so simple and motivating!',
+    content: 'SimpleFastly completely transformed my relationship with food. I\'ve lost 25 pounds and feel more energetic than ever. The app makes fasting so simple and motivating!',
     rating: 5,
     result: 'Lost 25 lbs in 3 months',
   },
@@ -21,7 +21,7 @@ const testimonials = [
     name: 'Emily Rodriguez',
     role: 'Fitness Coach',
     image: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150',
-    content: 'I recommend FastFlow to all my clients. The visual progress tracking and motivational quotes keep them engaged and committed to their fasting goals.',
+    content: 'I recommend SimpleFastly to all my clients. The visual progress tracking and motivational quotes keep them engaged and committed to their fasting goals.',
     rating: 5,
     result: 'Recommends to 100+ clients',
   },
@@ -37,7 +37,7 @@ export default function Testimonials() {
             Real Results from Real People
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 font-manrope max-w-3xl mx-auto">
-            Join thousands who have transformed their health and achieved their goals with FastFlow
+            Join thousands who have transformed their health and achieved their goals with SimpleFastly
           </p>
         </div>
 
