@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Clock, User, Calendar } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Intermittent Fasting Blog - Expert Guides & Tips',
+  title: 'Intermittent Fasting Blog - Expert Guides & Tips.',
   description: 'Discover the latest research, expert tips, and success stories about intermittent fasting. Learn how to optimize your fasting journey for maximum health benefits.',
   openGraph: {
     title: 'Intermittent Fasting Blog - Expert Guides & Tips',
