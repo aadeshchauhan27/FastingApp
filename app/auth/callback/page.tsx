@@ -2,11 +2,12 @@
 
 export const dynamic = 'force-dynamic';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-export default function AuthCallback() {
+function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -64,5 +65,13 @@ export default function AuthCallback() {
         <p className="mt-4 text-gray-600 dark:text-gray-400 font-manrope">Completing authentication...</p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthCallbackInner />
+    </Suspense>
   );
 } 
